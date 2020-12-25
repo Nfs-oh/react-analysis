@@ -13,7 +13,10 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
   (global = global || self, factory(global.React = {}));
-}(this, (function (exports) { 'use strict';
+}(this, (function (exports) {
+  'use strict';
+
+  console.log('-----------, =============')
 
   var ReactVersion = '16.14.0';
 
@@ -753,6 +756,9 @@
 
 
   var ReactElement = function (type, key, ref, self, source, owner, props) {
+
+    console.log(type, 'type');
+
     var element = {
       // This tag allows us to uniquely identify this as a React Element
       $$typeof: REACT_ELEMENT_TYPE,
