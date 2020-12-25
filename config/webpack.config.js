@@ -156,6 +156,10 @@ module.exports = function (webpackEnv) {
   };
 
   return {
+    externals: {
+      'react': 'window.React',
+      'react-dom': 'window.ReactDOM'
+    },
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
     // Stop compilation early in production
     bail: isEnvProduction,
