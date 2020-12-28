@@ -1,0 +1,222 @@
+##### ReactDom.render
+- ReactDom.render 是整个web应用的入口，React负责构建虚拟dom，ReactDom.render则负责构建真实的 dom，因此React和ReactDom分离，使得React构建出来的虚拟dom树，可以被转换成任意的平台的代码，比如小程序，移动设备，服务端渲染等
+
+##### render入口
+```javascript
+  function render(element, container, callback) {
+
+    // element一般为 app 的根节点，container 为 id=root 的真实节点
+    // 开始构建react fiber树，并且解析虚拟dom
+    return legacyRenderSubtreeIntoContainer(null, element, container, false, callback);
+  }
+
+  function legacyRenderSubtreeIntoContainer(
+    parentComponent = null,
+    children = 'rootElement',
+    container = 'id = root',
+    forceHydrate = false,
+    callback = undefined
+  ) {
+    // 该root节点会记录虚拟dom的引用，发生用户交互时，从真是dom可以索引虚拟dom
+    var root = container._reactRootContainer;
+    // 构建fiber root，并将fiber节点引用挂载到真实的节点对象中
+    var fiberRoot;
+
+    if (!root) {
+      // 初次渲染，构建 root，fiber root
+      root = container._reactRootContainer = legacyCreateRootFromDOMContainer(container, forceHydrate);
+      fiberRoot = root._internalRoot;
+
+      // 首次渲染，禁用批处理，此处将构建所有的react节点
+      // 此时 react fiber root构建完毕，开始渲染节点
+      unbatchedUpdates(function () {
+        updateContainer(children, fiberRoot, parentComponent, callback);
+      });
+    } else {
+      fiberRoot = root._internalRoot;
+      updateContainer(children, fiberRoot, parentComponent, callback);
+    }
+
+    fiberRoot = root._internalRoot;
+    updateContainer(children, fiberRoot, parentComponent, callback);
+    return getPublicRootInstance(fiberRoot);
+  }
+
+```
+
+- 分析 render root 构建函数
+```javascript
+  function legacyCreateRootFromDOMContainer(container, forceHydrate = false) {
+    // 该属性用来判断是否服务端渲染，或者是混合开发, 以下删除该逻辑代码
+    var shouldHydrate = forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
+    ...
+
+    return createLegacyRoot(container, undefined);
+  }
+
+  function createLegacyRoot(container, options = undefined) {
+    return new ReactDOMBlockingRoot(container, LegacyRoot = 0, options = undefined);
+  }
+
+  function ReactDOMBlockingRoot(container = '<div id="root"/>', tag = 0, options = undefined) {
+    this._internalRoot = createRootImpl(container, tag, options);
+  }
+
+  function createRootImpl(container, tag = 0, options = undefined) {
+
+    var root = createContainer(container, tag, false);
+
+    // 在真实dom节点中，添加属性 '__reactContainer$' + randomKey，指向当前的 fiber node
+    markContainerAsRoot(root.current, container);
+    var containerNodeType = container.nodeType;
+    {
+      var rootContainerElement = container.nodeType === COMMENT_NODE ? container.parentNode : container;
+      listenToAllSupportedEvents(rootContainerElement);
+    }
+    return root;
+  }
+
+  function createContainer(
+    containerInfo = '<div id="root"/>',
+    tag = 0,
+    hydrate = false,
+    hydrationCallbacks = undefined
+  ) {
+    return createFiberRoot(containerInfo, tag, hydrate);
+  }
+
+  // fiber root创建函数
+  function createFiberRoot(containerInfo, tag, hydrate, hydrationCallbacks) {
+    var root = new FiberRootNode(containerInfo, tag, hydrate);
+
+    // 创建fiber node节点
+    var uninitializedFiber = createHostRootFiber(tag);
+    root.current = uninitializedFiber;
+    uninitializedFiber.stateNode = root;    // 添加fiber root的引用
+
+    // 初始化更新队列
+    initializeUpdateQueue(uninitializedFiber);
+    return root;
+  }
+
+  // 判断当前react运行环境，并传入对应的参数，构建fiber node
+  function createHostRootFiber() {
+    return createFiber(HostRoot = 3, null, null, mode = 0);
+  }
+
+  function initializeUpdateQueue(fiber: FiberNode) {
+    var queue = {
+      baseState: fiber.memoizedState,       // root fiber node memoizedState = null
+      firstBaseUpdate: null,
+      lastBaseUpdate: null,
+      shared: {
+        pending: null
+      },
+      effects: null
+    };
+    fiber.updateQueue = queue;
+  }
+```
+
+- fiber构建函数
+```javascript
+  // root fiber构建函数
+  function FiberRootNode(containerInfo = '<div id="root"/>', tag = 0, hydrate = false) {
+    this.tag = tag;
+    this.containerInfo = containerInfo;
+    this.pendingChildren = null;
+    this.current = null;
+
+    //缓存
+    this.pingCache = null;
+
+    //已经完成任务的FiberRoot对象，在commit(提交)阶段只会处理该值对应的任务
+    this.finishedWork = null;
+
+    //在任务被挂起的时候通过setTimeout设置的返回内容，用来下一次如果有新的任务挂起时清理还没触发的timeout
+    this.timeoutHandle = noTimeout;     // = -1
+
+    //顶层 context 对象
+    this.context = null;
+    this.pendingContext = null;
+    this.hydrate = hydrate;
+    this.callbackNode = null;
+    this.callbackPriority = NoLanePriority;
+    this.eventTimes = createLaneMap(NoLanes);           // [0, ....., 0]  length = 31
+    this.expirationTimes = createLaneMap(NoTimestamp);  // [-1, ....., -1]  length = 31
+    this.pendingLanes = NoLanes;         // = 0
+    this.suspendedLanes = NoLanes;       // = 0
+    this.pingedLanes = NoLanes;          // = 0
+    this.expiredLanes = NoLanes;         // = 0
+    this.mutableReadLanes = NoLanes;     // = 0
+    this.finishedLanes = NoLanes;        // = 0
+    this.entangledLanes = NoLanes;       // = 0
+    this.entanglements = createLaneMap(NoLanes);        // [0, ....., 0]  length = 31
+  }
+
+  // fiber node 构造函数
+  function FiberNode(tag, pendingProps, key, mode) {
+    // Instance
+    this.tag = tag;                   // root fiber tag = 0
+    this.key = key;                   // root fiber key = undefined
+
+    //大部分情况同type，某些情况不同，比如 FunctionComponent 使用React.memo 包裹
+    this.elementType = null;
+
+    // 对于 FunctionComponent，指函数本身，对于ClassComponent，指class，对于HostComponent，指 DOM 节点的tagName
+    this.type = null;
+    this.stateNode = null; // Fiber
+
+    // 指向父Fiber节点
+    this.return = null;
+
+    //指向第一个子Fiber节点
+    this.child = null;
+    this.sibling = null;
+    this.index = 0;
+
+    // 获取真实节点的 DOM 属性
+    this.ref = null;
+
+    // 动态的工作单元属性。保存本次更新造成的状态改变相关信息
+    this.pendingProps = pendingProps;   // root fiber pendingProps = undefined
+    this.memoizedProps = null;
+    this.updateQueue = null;
+    this.memoizedState = null;
+    this.dependencies = null;
+
+    // 开发或生产环境
+    this.mode = mode; // Effects      // root fiber mode = 0
+
+    this.flags = NoFlags;
+
+    // 保存本次更新会造成的DOM操作。比如删除，移动          // 0
+    this.nextEffect = null;
+    this.firstEffect = null;
+    this.lastEffect = null;
+    
+    this.lanes = NoLanes;             // 0
+    this.childLanes = NoLanes;        // 0
+    this.alternate = null;
+    {
+      this.actualDuration = Number.NaN;
+      this.actualStartTime = Number.NaN;
+      this.selfBaseDuration = Number.NaN;
+      this.treeBaseDuration = Number.NaN;
+      this.actualDuration = 0;
+      this.actualStartTime = -1;
+      this.selfBaseDuration = 0;
+      this.treeBaseDuration = 0;
+    }
+  }
+```
+
+##### Fiber 的八种类型
+export const FunctionComponent = 0;// 函数类型
+export const ClassComponent = 1;// class 类型
+export const IndeterminateComponent = 2; // 不确定类型；可能是class或function
+export const HostRoot = 3; // 树的根
+export const HostPortal = 4; // 一颗子树
+export const HostComponent = 5; // 原生节点；根据环境而定，浏览器环境就是div等
+export const HostText = 6; // 纯文本节点
+export const Fragment = 7; // 节点片段

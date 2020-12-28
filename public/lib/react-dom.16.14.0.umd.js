@@ -24975,7 +24975,8 @@
       // Without some nodes in the tree having empty base times.
       mode |= ProfileMode;
     }
-
+    console.log(tag, 'tag');
+    console.log(mode, 'mode');
     return createFiber(HostRoot, null, null, mode);
   }
   function createFiberFromTypeAndProps(type, // React$ElementType
@@ -25476,11 +25477,14 @@
 
     var context = getContextForSubtree(parentComponent);
 
+    
     if (container.context === null) {
       container.context = context;
     } else {
       container.pendingContext = context;
     }
+
+    console.log(container, 'container.context')
 
     {
       if (isRendering && current !== null && !didWarnAboutNestedUpdates) {
