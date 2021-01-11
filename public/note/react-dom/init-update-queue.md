@@ -2,6 +2,10 @@
 - 使用unbatchedUpdates
 ```javascript
   // 首次构建react应用，不使用批处理，而是将首屏所有的react节点构建出来
+  // 在render函数体中调用 legacyRenderSubtreeIntoContainer 渲染函数
+  // 构建初始 fiberRoot 之后，调用 updateContainer 开始渲染
+
+  // 禁止使用批处理函数体
   function unbatchedUpdates(fn, a = undefined) {
     // 缓存当前执行向下文
     var prevExecutionContext = executionContext;          // 初始化executionContext = NoContext = 0;
@@ -24,6 +28,7 @@
 
 - 开始更新
 ```javascript
+  // 初次渲染渲染函数体入口
   updateContainer(
     children,           // <App />
     fiberRoot,          // fiberRoot
@@ -38,13 +43,14 @@
     callback = undefined
   ) {
 
-    var current$1 = container.current;    // fiber对象
+    var current$1 = container.current;    // fiberRoot 的 fiber对象
     var eventTime = requestEventTime();   // 时间戳   195.20499999634922
 
     var lane = requestUpdateLane(current$1);  // 初次构建 lane = 1
 
     var context = getContextForSubtree(parentComponent);  // 初次构建 context = {}
 
+    // 该 context 是 React Context 的 context 对象，首次渲染没有 parentComponent fiberRoot的context为 {}
     if (container.context === null) {
       container.context = context;
     } else {
@@ -55,11 +61,14 @@
     var update = createUpdate(eventTime, lane);
 
     update.payload = {
-      element: element
+      element: element  
     };
     update.callback = callback;
 
+    // 插入 update 到 fiberRoot 的 fiberNode 的 updateQueue 队列
     enqueueUpdate(current$1, update);
+
+    // 开始根据 fiber 更新
     scheduleUpdateOnFiber(current$1, lane, eventTime);
     return lane;
   }
@@ -78,8 +87,34 @@
   }
 
   // 初始化更新队列
+  // 第一册参数 fiber 为 fiberRoot 的 fiber 对象，update 为 初次渲染构建的 update 对象
   function enqueueUpdate(fiber, update) {
     var updateQueue = fiber.updateQueue;
+
+    /*
+      console.log(update) =>
+      callback: null
+      eventTime: 285.78499995637685
+      lane: 1
+      next: null
+      payload: {
+        element: <App />
+      }
+      tag: 0
+    */
+    /*
+      console.log(updateQueue) =>
+      {
+        baseState: null,
+        effects: null,
+        firstBaseUpdate: null,
+        lastBaseUpdate: null,
+        shared: {
+          pending: null,
+        }
+        tag: 0,
+      }
+    */
 
     if (updateQueue === null) {
       // 如果 rootFiber.current 没有更新队列，则停止更新
@@ -87,7 +122,7 @@
     }
 
     var sharedQueue = updateQueue.shared;
-    var pending = sharedQueue.pending;
+    var pending = sharedQueue.pending;    // null
 
     if (pending === null) {
       // 第一次更新 <App />, 将更新队列的next指向自己
@@ -97,16 +132,22 @@
       pending.next = update;
     }
 
-    // 将当前的 update 对象，包含 element <App />，插入队列，准备更新
+    // 将当前的 update 对象，包含根节点 payload.element = <App />
+    // 插入到 fiberRoot 的 fiber 对象属性 updateQueue.pending 属性中
+    // 此时更新的前置信息都已经准本完毕，下一步调用 scheduleUpdateOnFiber 根据 fiber 来渲染
     sharedQueue.pending = update;
   }
 
-
-
-  function scheduleUpdateOnFiber(fiber, lane, eventTime) {
+  function scheduleUpdateOnFiber(
+    fiber,        // fiberRoot.current  
+    lane,         // 初次构建 lane = 1
+    eventTime     // 时间戳   195.20499999634922
+  ) {
+    // 检查 update tree 深度是否超过50
     checkForNestedUpdates();
+    // 将fiber的 fiber.lanes | lane 位运算，然后返回根 fiber node 此时的根就是该 fiber
     var root = markUpdateLaneFromFiberToRoot(fiber, lane);
-
+    // 将 fiber.pendingLanes |= lane 运算，得到的结果是将 lane 赋值给 fiber.pendingLanes，该运算符 ｜= 不清楚啥意思
     markRootUpdated(root, lane, eventTime);
 
     if (root === workInProgressRoot) {

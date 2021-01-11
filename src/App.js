@@ -4,7 +4,6 @@ const { createContext } = React;
 
 const ThemeContext = createContext(123);
 
-console.log(ThemeContext, 'ThemeContext')
 
 
 function App() {
@@ -18,6 +17,5 @@ function App() {
 
 const MemoApp = window.React.memo(App);
 
-console.log(React.createElement(MemoApp, { a: 'a'}))
 
 export default App;

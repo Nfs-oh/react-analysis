@@ -16,8 +16,6 @@
 }(this, (function (exports) {
   'use strict';
 
-  console.log('-----------, =============')
-
   var ReactVersion = '16.14.0';
 
   // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
@@ -756,8 +754,6 @@
 
 
   var ReactElement = function (type, key, ref, self, source, owner, props) {
-
-    console.log(type, 'type');
 
     var element = {
       // This tag allows us to uniquely identify this as a React Element

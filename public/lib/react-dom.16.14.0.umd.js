@@ -11969,6 +11969,8 @@
   function enqueueUpdate(fiber, update) {
     var updateQueue = fiber.updateQueue;
 
+    console.log(updateQueue, 'updateQueue');
+
     if (updateQueue === null) {
       // Only occurs if the fiber has been unmounted.
       return;
@@ -24975,8 +24977,6 @@
       // Without some nodes in the tree having empty base times.
       mode |= ProfileMode;
     }
-    console.log(tag, 'tag');
-    console.log(mode, 'mode');
     return createFiber(HostRoot, null, null, mode);
   }
   function createFiberFromTypeAndProps(type, // React$ElementType
@@ -25483,8 +25483,6 @@
     } else {
       container.pendingContext = context;
     }
-
-    console.log(container, 'container.context')
 
     {
       if (isRendering && current !== null && !didWarnAboutNestedUpdates) {
@@ -26041,6 +26039,8 @@
       root = container._reactRootContainer = legacyCreateRootFromDOMContainer(container, forceHydrate);
       fiberRoot = root._internalRoot;
 
+      // console.log(root, '432432----')
+
       if (typeof callback === 'function') {
         var originalCallback = callback;
 
@@ -26049,7 +26049,6 @@
           originalCallback.call(instance);
         };
       } // Initial mount should not be batched.
-
 
       unbatchedUpdates(function () {
         updateContainer(children, fiberRoot, parentComponent, callback);

@@ -68,7 +68,7 @@
 
     // 在真实dom节点中，添加属性 '__reactContainer$' + randomKey，指向当前的 fiber node
     markContainerAsRoot(root.current, container);
-    var containerNodeType = container.nodeType;
+
     {
       var rootContainerElement = container.nodeType === COMMENT_NODE ? container.parentNode : container;
       listenToAllSupportedEvents(rootContainerElement);
@@ -77,20 +77,20 @@
   }
 
   function createContainer(
-    containerInfo = '<div id="root"/>',
-    tag = 0,
-    hydrate = false,
+    containerInfo,    // => '<div id="root"/>',
+    tag,              // 初次构建 tag = 0,
+    hydrate，         // 混合模式 hydrate = false
     hydrationCallbacks = undefined
   ) {
-    return createFiberRoot(containerInfo, tag, hydrate);
+    return createFiberRoot(containerInfo, tag, hydrate);    // 创建fiberRoot函数入口
   }
 
   // fiber root创建函数
   function createFiberRoot(containerInfo, tag, hydrate, hydrationCallbacks) {
-    var root = new FiberRootNode(containerInfo, tag, hydrate);
+    var root = new FiberRootNode(containerInfo, tag, hydrate);    // fiberRoot 根节点构造函数
 
-    // 创建fiber node节点
-    var uninitializedFiber = createHostRootFiber(tag);
+    // 创建未初始化的 fiber node节点
+    var uninitializedFiber = createHostRootFiber(tag);      // 创建根节点的 fiber 对象
     root.current = uninitializedFiber;
     uninitializedFiber.stateNode = root;    // 添加fiber root的引用
 
@@ -104,6 +104,12 @@
     return createFiber(HostRoot = 3, null, null, mode = 0);
   }
 
+  // 创建并返回 fiber 对象
+  var createFiber = function (tag, pendingProps, key, mode) {
+    return new FiberNode(tag, pendingProps, key, mode);
+  };
+
+  // 初始化 fiberRoot 的 fiber 对象 的 updateQueue
   function initializeUpdateQueue(fiber: FiberNode) {
     var queue = {
       baseState: fiber.memoizedState,       // root fiber node memoizedState = null
@@ -181,6 +187,8 @@
     // 动态的工作单元属性。保存本次更新造成的状态改变相关信息
     this.pendingProps = pendingProps;   // root fiber pendingProps = undefined
     this.memoizedProps = null;
+
+    // 节点更新队列
     this.updateQueue = null;
     this.memoizedState = null;
     this.dependencies = null;
@@ -212,11 +220,13 @@
 ```
 
 ##### Fiber 的八种类型
-export const FunctionComponent = 0;// 函数类型
-export const ClassComponent = 1;// class 类型
-export const IndeterminateComponent = 2; // 不确定类型；可能是class或function
-export const HostRoot = 3; // 树的根
-export const HostPortal = 4; // 一颗子树
-export const HostComponent = 5; // 原生节点；根据环境而定，浏览器环境就是div等
-export const HostText = 6; // 纯文本节点
-export const Fragment = 7; // 节点片段
+```javascript
+  export const FunctionComponent = 0;// 函数类型
+  export const ClassComponent = 1;// class 类型
+  export const IndeterminateComponent = 2; // 不确定类型；可能是class或function
+  export const HostRoot = 3; // 树的根
+  export const HostPortal = 4; // 一颗子树
+  export const HostComponent = 5; // 原生节点；根据环境而定，浏览器环境就是div等
+  export const HostText = 6; // 纯文本节点
+  export const Fragment = 7; // 节点片段
+```
