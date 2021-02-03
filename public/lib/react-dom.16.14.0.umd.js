@@ -5831,18 +5831,18 @@
 
     root.suspendedLanes = 0;
     root.pingedLanes = 0;
-    root.expiredLanes &= remainingLanes;
-    root.mutableReadLanes &= remainingLanes;
-    root.entangledLanes &= remainingLanes;
-    var entanglements = root.entanglements;
+    root.expiredLanes &= remainingLanes;      // 0
+    root.mutableReadLanes &= remainingLanes;  // 0
+    root.entangledLanes &= remainingLanes;    // 0
+    var entanglements = root.entanglements;    // 0
     var eventTimes = root.eventTimes;
     var expirationTimes = root.expirationTimes; // Clear the lanes that no longer have pending work
 
-    var lanes = noLongerPendingLanes;
-
+    var lanes = noLongerPendingLanes; // 0
     while (lanes > 0) {
+      console.log('----=++++')
       var index = pickArbitraryLaneIndex(lanes);
-      var lane = 1 << index;
+      var lane = 1 << index;            // 向左移动 index 位
       entanglements[index] = NoLanes;
       eventTimes[index] = NoTimestamp;
       expirationTimes[index] = NoTimestamp;
@@ -11968,8 +11968,6 @@
   }
   function enqueueUpdate(fiber, update) {
     var updateQueue = fiber.updateQueue;
-
-    console.log(updateQueue, 'updateQueue');
 
     if (updateQueue === null) {
       // Only occurs if the fiber has been unmounted.
@@ -18875,7 +18873,8 @@
 
   function beginWork(current, workInProgress, renderLanes) {
     var updateLanes = workInProgress.lanes;
-
+   
+    // console.log(current, workInProgress, renderLanes, 'current, workInProgress, renderLanes')
     {
       if (workInProgress._debugNeedsRemount && current !== null) {
         // This will restart the begin phase with a new fiber.
@@ -18884,14 +18883,15 @@
     }
 
     if (current !== null) {
-      var oldProps = current.memoizedProps;
-      var newProps = workInProgress.pendingProps;
-
+      var oldProps = current.memoizedProps;         // 第一次执行为 null
+      var newProps = workInProgress.pendingProps;   // 第一次执行为 null
+      debugger
       if (oldProps !== newProps || hasContextChanged() || ( // Force a re-render if the implementation changed due to hot reload:
        workInProgress.type !== current.type )) {
         // If props or context changed, mark the fiber as having performed work.
         // This may be unset if the props are determined to be equal later (memo).
         didReceiveUpdate = true;
+        console.log('??????')
       } else if (!includesSomeLane(renderLanes, updateLanes)) {
         didReceiveUpdate = false; // This fiber does not have any pending work. Bailout without entering
         // the begin phase. There's still some bookkeeping we that needs to be done
@@ -21864,10 +21864,10 @@
   }
 
   function scheduleUpdateOnFiber(fiber, lane, eventTime) {
+    
     checkForNestedUpdates();
     warnAboutRenderPhaseUpdatesInDEV(fiber);
     var root = markUpdateLaneFromFiberToRoot(fiber, lane);
-
     if (root === null) {
       warnAboutUpdateOnUnmountedFiberInDEV(fiber);
       return null;
@@ -21911,7 +21911,9 @@
         // should be deferred until the end of the batch.
 
         performSyncWorkOnRoot(root);
+       
       } else {
+        
         ensureRootIsScheduled(root, eventTime);
         schedulePendingInteractions(root, lane);
 
@@ -21959,7 +21961,6 @@
     // Update the source fiber's lanes
     sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
     var alternate = sourceFiber.alternate;
-
     if (alternate !== null) {
       alternate.lanes = mergeLanes(alternate.lanes, lane);
     }
@@ -22328,7 +22329,6 @@
     if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
       executionContext |= RetryAfterError; // If an error occurred during hydration,
       // discard server response and fall back to client side render.
-
       if (root.hydrate) {
         root.hydrate = false;
         clearContainer(root.containerInfo);
@@ -22344,15 +22344,6 @@
         exitStatus = renderRootSync(root, lanes);
       }
     }
-
-    if (exitStatus === RootFatalErrored) {
-      var fatalError = workInProgressRootFatalError;
-      prepareFreshStack(root, NoLanes);
-      markRootSuspended$1(root, lanes);
-      ensureRootIsScheduled(root, now());
-      throw fatalError;
-    } // We now have a consistent tree. Because this is a sync render, we
-    // will commit it even if something suspended.
 
 
     var finishedWork = root.current.alternate;
@@ -22513,8 +22504,7 @@
   function prepareFreshStack(root, lanes) {
     root.finishedWork = null;
     root.finishedLanes = NoLanes;
-    var timeoutHandle = root.timeoutHandle;
-
+    var timeoutHandle = root.timeoutHandle;   
     if (timeoutHandle !== noTimeout) {
       // The root previous suspended and scheduled a timeout to commit a fallback
       // state. Now that we have additional work, cancel the timeout.
@@ -22540,6 +22530,7 @@
     workInProgressRootSkippedLanes = NoLanes;
     workInProgressRootUpdatedLanes = NoLanes;
     workInProgressRootPingedLanes = NoLanes;
+
 
     {
       spawnedWorkDuringRender = null;
@@ -22692,11 +22683,12 @@
 
     if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
       prepareFreshStack(root, lanes);
+
       startWorkOnPendingInteractions(root, lanes);
     }
 
     var prevInteractions = pushInteractions(root);
-
+   
     do {
       try {
         workLoopSync();
@@ -22706,6 +22698,12 @@
       }
     } while (true);
 
+    /**
+     * 将全局变量设置为null
+        currentlyRenderingFiber = null;
+        lastContextDependency = null;
+        lastContextWithAllBitsObserved = null;
+     */
     resetContextDependencies();
 
     {
@@ -22716,7 +22714,7 @@
     popDispatcher(prevDispatcher);
 
     if (workInProgress !== null) {
-      // This is a sync render, so we should have finished the whole tree.
+      
       {
         {
           throw Error( "Cannot commit an incomplete root. This error is likely caused by a bug in React. Please file an issue." );
@@ -22812,8 +22810,10 @@
     }
 
     resetCurrentFiber();
+    
     unitOfWork.memoizedProps = unitOfWork.pendingProps;
 
+    
     if (next === null) {
       // If this doesn't spawn new work, complete the current work.
       completeUnitOfWork(unitOfWork);
@@ -23050,6 +23050,8 @@
       return null;
     }
 
+    // lanes = 1;
+
     root.finishedWork = null;
     root.finishedLanes = NoLanes;
 
@@ -23065,17 +23067,20 @@
     // pending time is whatever is left on the root fiber.
 
     var remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+
     markRootFinished(root, remainingLanes); // Clear already finished discrete updates in case that a later call of
     // `flushDiscreteUpdates` starts a useless render pass which may cancels
     // a scheduled timeout.
 
     if (rootsWithPendingDiscreteUpdates !== null) {
+      console.log('4324---')
       if (!hasDiscreteLanes(remainingLanes) && rootsWithPendingDiscreteUpdates.has(root)) {
         rootsWithPendingDiscreteUpdates.delete(root);
       }
     }
 
     if (root === workInProgressRoot) {
+      console.log('342341234---')
       // We can reset these now that they are finished.
       workInProgressRoot = null;
       workInProgress = null;
@@ -23086,6 +23091,7 @@
     var firstEffect;
 
     if (finishedWork.flags > PerformedWork) {
+      console.log('342341234---')
       // A fiber's effect list consists only of its children, not itself. So if
       // the root has an effect, we need to add it to the end of the list. The
       // resulting list is the set that would belong to the root's parent, if it
@@ -23102,7 +23108,7 @@
     }
 
     if (firstEffect !== null) {
-
+      console.log('firstEffect---')
       var prevExecutionContext = executionContext;
       executionContext |= CommitContext;
       var prevInteractions = pushInteractions(root); // Reset this to null before calling lifecycles
@@ -24183,8 +24189,8 @@
     // we can accurately attribute time spent working on it, And so that cascading
     // work triggered during the render phase will be associated with it.
 
-
     var interactions = new Set();
+   
     root.pendingInteractionMap.forEach(function (scheduledInteractions, scheduledLane) {
       if (includesSomeLane(lanes, scheduledLane)) {
         scheduledInteractions.forEach(function (interaction) {
@@ -24821,14 +24827,6 @@
       workInProgress.type = current.type;
       workInProgress.stateNode = current.stateNode;
 
-      {
-        // DEV-only fields
-        workInProgress._debugID = current._debugID;
-        workInProgress._debugSource = current._debugSource;
-        workInProgress._debugOwner = current._debugOwner;
-        workInProgress._debugHookTypes = current._debugHookTypes;
-      }
-
       workInProgress.alternate = current;
       current.alternate = workInProgress;
     } else {
@@ -24874,26 +24872,6 @@
     {
       workInProgress.selfBaseDuration = current.selfBaseDuration;
       workInProgress.treeBaseDuration = current.treeBaseDuration;
-    }
-
-    {
-      workInProgress._debugNeedsRemount = current._debugNeedsRemount;
-
-      switch (workInProgress.tag) {
-        case IndeterminateComponent:
-        case FunctionComponent:
-        case SimpleMemoComponent:
-          workInProgress.type = resolveFunctionForHotReloading(current.type);
-          break;
-
-        case ClassComponent:
-          workInProgress.type = resolveClassForHotReloading(current.type);
-          break;
-
-        case ForwardRef:
-          workInProgress.type = resolveForwardRefForHotReloading(current.type);
-          break;
-      }
     }
 
     return workInProgress;
@@ -26038,8 +26016,6 @@
       // Initial mount
       root = container._reactRootContainer = legacyCreateRootFromDOMContainer(container, forceHydrate);
       fiberRoot = root._internalRoot;
-
-      // console.log(root, '432432----')
 
       if (typeof callback === 'function') {
         var originalCallback = callback;
