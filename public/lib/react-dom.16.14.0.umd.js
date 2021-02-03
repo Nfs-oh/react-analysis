@@ -17566,8 +17566,12 @@
   }
 
   function updateHostRoot(current, workInProgress, renderLanes) {
+
+    
+    
     pushHostRootContext(workInProgress);
     var updateQueue = workInProgress.updateQueue;
+
 
     if (!(current !== null && updateQueue !== null)) {
       {
@@ -17575,15 +17579,20 @@
       }
     }
 
-    var nextProps = workInProgress.pendingProps;
-    var prevState = workInProgress.memoizedState;
-    var prevChildren = prevState !== null ? prevState.element : null;
+    var nextProps = workInProgress.pendingProps;    
+    var prevState = workInProgress.memoizedState;   // null
+    var prevChildren = prevState !== null ? prevState.element : null;   // null
     cloneUpdateQueue(current, workInProgress);
+
+    console.log(workInProgress, current, 'workInProgress');
     processUpdateQueue(workInProgress, nextProps, null, renderLanes);
     var nextState = workInProgress.memoizedState; // Caution: React DevTools currently depends on this property
     // being called "element".
+    
+
 
     var nextChildren = nextState.element;
+
 
     if (nextChildren === prevChildren) {
       resetHydrationState();
@@ -18885,7 +18894,6 @@
     if (current !== null) {
       var oldProps = current.memoizedProps;         // 第一次执行为 null
       var newProps = workInProgress.pendingProps;   // 第一次执行为 null
-      debugger
       if (oldProps !== newProps || hasContextChanged() || ( // Force a re-render if the implementation changed due to hot reload:
        workInProgress.type !== current.type )) {
         // If props or context changed, mark the fiber as having performed work.
@@ -21162,7 +21170,7 @@
   }
 
   function commitPlacement(finishedWork) {
-
+    debugger
 
     var parentFiber = getHostParentFiber(finishedWork); // Note: these two variables *must* always be updated together.
 
@@ -21206,10 +21214,11 @@
       parentFiber.flags &= ~ContentReset;
     }
 
+    // null
     var before = getHostSibling(finishedWork); // We only have the top Fiber that was inserted but we need to recurse down its
     // children to find all the terminal nodes.
 
-    if (isContainer) {
+    if (isContainer) {    // true
       insertOrAppendPlacementNodeIntoContainer(finishedWork, before, parent);
     } else {
       insertOrAppendPlacementNode(finishedWork, before, parent);
@@ -21219,7 +21228,7 @@
   function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
     var tag = node.tag;
     var isHost = tag === HostComponent || tag === HostText;
-
+    debugger;
     if (isHost || enableFundamentalAPI ) {
       var stateNode = isHost ? node.stateNode : node.stateNode.instance;
 
@@ -23108,7 +23117,6 @@
     }
 
     if (firstEffect !== null) {
-      console.log('firstEffect---')
       var prevExecutionContext = executionContext;
       executionContext |= CommitContext;
       var prevInteractions = pushInteractions(root); // Reset this to null before calling lifecycles
@@ -23153,7 +23161,7 @@
 
 
       nextEffect = firstEffect;
-
+      debugger;
       do {
         {
           invokeGuardedCallback(null, commitMutationEffects, null, root, renderPriorityLevel);
@@ -23370,6 +23378,7 @@
   }
 
   function commitMutationEffects(root, renderPriorityLevel) {
+    debugger;
     // TODO: Should probably move the bulk of this function to commitWork.
     while (nextEffect !== null) {
       setCurrentFiber(nextEffect);
@@ -23395,7 +23404,7 @@
 
       switch (primaryFlags) {
         case Placement:
-          {
+          { // 首次渲染执行该分支
             commitPlacement(nextEffect); // Clear the "placement" from effect tag so that we know that this is
             // inserted, before any life-cycles like componentDidMount gets called.
             // TODO: findDOMNode doesn't rely on this any more but isMounted does
