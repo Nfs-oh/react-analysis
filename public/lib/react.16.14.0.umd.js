@@ -1606,6 +1606,7 @@
   }
   function useMemo(create, deps) {
     var dispatcher = resolveDispatcher();
+    console.log(dispatcher, 'dispatcher')
     return dispatcher.useMemo(create, deps);
   }
   function useImperativeHandle(ref, create, deps) {

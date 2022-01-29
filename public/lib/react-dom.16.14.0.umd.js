@@ -843,6 +843,8 @@
   }
 
   var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+  console.log(ReactCurrentDispatcher, 'ReactCurrentDispatcher')
+  // debugger;
   var prefix;
   function describeBuiltInComponentFrame(name, source, ownerFn) {
     {
@@ -5891,6 +5893,7 @@
   }
   function createEventListenerWrapperWithPriority(targetContainer, domEventName, eventSystemFlags) {
     var eventPriority = getEventPriorityForPluginSystem(domEventName);
+    // console.log(eventPriority, 'eventPriority')
     var listenerWrapper;
 
     switch (eventPriority) {
@@ -14824,6 +14827,7 @@
   var didWarnAboutMismatchedHooksForComponent;
   var didWarnAboutUseOpaqueIdentifier;
 
+
   {
     didWarnAboutUseOpaqueIdentifier = {};
     didWarnAboutMismatchedHooksForComponent = new Set();
@@ -14976,7 +14980,7 @@
   function renderWithHooks(current, workInProgress, Component, props, secondArg, nextRenderLanes) {
     renderLanes = nextRenderLanes;
     currentlyRenderingFiber$1 = workInProgress;
-
+    // debugger;
     {
       hookTypesDev = current !== null ? current._debugHookTypes : null;
       hookTypesUpdateIndexDev = -1; // Used for hot reloading:
@@ -15663,6 +15667,7 @@
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: initialState
     };
+    // debugger;
     var dispatch = queue.dispatch = dispatchAction.bind(null, currentlyRenderingFiber$1, queue);
     return [hook.memoizedState, dispatch];
   }
@@ -15674,15 +15679,19 @@
   function rerenderState(initialState) {
     return rerenderReducer(basicStateReducer);
   }
+  let count = 1;
 
   function pushEffect(tag, create, destroy, deps) {
+    // debugger
+    count += 1;
     var effect = {
       tag: tag,
       create: create,
       destroy: destroy,
       deps: deps,
       // Circular
-      next: null
+      next: null,
+      count,
     };
     var componentUpdateQueue = currentlyRenderingFiber$1.updateQueue;
 
@@ -15736,7 +15745,7 @@
     var hook = updateWorkInProgressHook();
     var nextDeps = deps === undefined ? null : deps;
     var destroy = undefined;
-
+    // debugger;
     if (currentHook !== null) {
       var prevEffect = currentHook.memoizedState;
       destroy = prevEffect.destroy;
@@ -15773,7 +15782,7 @@
         warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber$1);
       }
     }
-
+    // debugger;
     return updateEffectImpl(Update | Passive, Passive$1, create, deps);
   }
 
@@ -16088,7 +16097,7 @@
         error("State updates from the useState() and useReducer() Hooks don't support the " + 'second callback argument. To execute a side effect after ' + 'rendering, declare it in the component body with useEffect().');
       }
     }
-
+    debugger;
     var eventTime = requestEventTime();
     var lane = requestUpdateLane(fiber);
     var update = {
@@ -16467,7 +16476,7 @@
         updateHookTypesDev();
         var prevDispatcher = ReactCurrentDispatcher$1.current;
         ReactCurrentDispatcher$1.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
-
+        // debugger;
         try {
           return updateState(initialState);
         } finally {
@@ -17425,7 +17434,6 @@
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
 
-
     var hasContext;
 
     if (isContextProvider(Component)) {
@@ -17808,6 +17816,7 @@
   }
 
   function mountIndeterminateComponent(_current, workInProgress, Component, renderLanes) {
+    // debugger
     if (_current !== null) {
       // An indeterminate component only mounts if it suspended inside a non-
       // concurrent tree, in an inconsistent state. We want to treat it like
@@ -18882,7 +18891,7 @@
 
   function beginWork(current, workInProgress, renderLanes) {
     var updateLanes = workInProgress.lanes;
-   
+    // debugger
     // console.log(current, workInProgress, renderLanes, 'current, workInProgress, renderLanes')
     {
       if (workInProgress._debugNeedsRemount && current !== null) {
@@ -19082,7 +19091,6 @@
 
 
     workInProgress.lanes = NoLanes;
-
     switch (workInProgress.tag) {
       case IndeterminateComponent:
         {
@@ -21170,7 +21178,6 @@
   }
 
   function commitPlacement(finishedWork) {
-    debugger
 
     var parentFiber = getHostParentFiber(finishedWork); // Note: these two variables *must* always be updated together.
 
@@ -21228,7 +21235,7 @@
   function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
     var tag = node.tag;
     var isHost = tag === HostComponent || tag === HostText;
-    debugger;
+    // debugger;
     if (isHost || enableFundamentalAPI ) {
       var stateNode = isHost ? node.stateNode : node.stateNode.instance;
 
@@ -21873,7 +21880,6 @@
   }
 
   function scheduleUpdateOnFiber(fiber, lane, eventTime) {
-    
     checkForNestedUpdates();
     warnAboutRenderPhaseUpdatesInDEV(fiber);
     var root = markUpdateLaneFromFiberToRoot(fiber, lane);
@@ -22307,6 +22313,7 @@
         throw Error( "Should not already be working." );
       }
     }
+    // debugger;
 
     flushPassiveEffects();
     var lanes;
@@ -22809,7 +22816,7 @@
     var current = unitOfWork.alternate;
     setCurrentFiber(unitOfWork);
     var next;
-
+    // debugger;
     if ( (unitOfWork.mode & ProfileMode) !== NoMode) {
       startProfilerTimer(unitOfWork);
       next = beginWork$1(current, unitOfWork, subtreeRenderLanes);
@@ -23028,6 +23035,7 @@
 
   function commitRoot(root) {
     var renderPriorityLevel = getCurrentPriorityLevel();
+    // debugger;
     runWithPriority$1(ImmediatePriority$1, commitRootImpl.bind(null, root, renderPriorityLevel));
     return null;
   }
@@ -23100,7 +23108,7 @@
     var firstEffect;
 
     if (finishedWork.flags > PerformedWork) {
-      console.log('342341234---')
+      console.log('342341234++++')
       // A fiber's effect list consists only of its children, not itself. So if
       // the root has an effect, we need to add it to the end of the list. The
       // resulting list is the set that would belong to the root's parent, if it
@@ -23117,6 +23125,7 @@
     }
 
     if (firstEffect !== null) {
+      console.log('abcdefg++++')
       var prevExecutionContext = executionContext;
       executionContext |= CommitContext;
       var prevInteractions = pushInteractions(root); // Reset this to null before calling lifecycles
@@ -23161,7 +23170,7 @@
 
 
       nextEffect = firstEffect;
-      debugger;
+      // debugger;
       do {
         {
           invokeGuardedCallback(null, commitMutationEffects, null, root, renderPriorityLevel);
@@ -23378,7 +23387,7 @@
   }
 
   function commitMutationEffects(root, renderPriorityLevel) {
-    debugger;
+    // debugger;
     // TODO: Should probably move the bulk of this function to commitWork.
     while (nextEffect !== null) {
       setCurrentFiber(nextEffect);
@@ -23981,6 +23990,7 @@
       // error See ReactErrorUtils for more information.
       // Before entering the begin phase, copy the work-in-progress onto a dummy
       // fiber. If beginWork throws, we'll use this to reset the state.
+      // debugger;
       var originalWorkInProgressCopy = assignFiberPropertiesInDEV(dummyFiber, unitOfWork);
 
       try {
@@ -26020,7 +26030,6 @@
 
     var root = container._reactRootContainer;
     var fiberRoot;
-
     if (!root) {
       // Initial mount
       root = container._reactRootContainer = legacyCreateRootFromDOMContainer(container, forceHydrate);
